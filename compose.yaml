@@ -1,0 +1,28 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: local_root_password
+      MYSQL_DATABASE: garaman_db
+      MYSQL_USER: garaman
+      MYSQL_PASSWORD: garaman_local_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - garaman_mysql_data:/var/lib/mysql
+      - ./database/garaman.sql:/docker-entrypoint-initdb.d/01-garaman.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+volumes:
+  garaman_mysql_data:
